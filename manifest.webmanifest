@@ -1,0 +1,19 @@
+{
+  "name":"FTK Gestão Pro — Assistente Web Push",
+  "short_name":"FTK Gestão",
+  "description":"FTK Gestão Pro · Assistente PWA com Web Push remoto.",
+  "id":"./index.html",
+  "start_url":"./index.html",
+  "scope":"./",
+  "display":"standalone",
+  "background_color":"#111419",
+  "theme_color":"#15191f",
+  "lang":"pt-BR",
+  "icons":[{"src":"./icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}],
+  "shortcuts":[
+    {"name":"Iniciar turno","short_name":"Turno","url":"./index.html?ftkAction=start-shift"},
+    {"name":"Nova corrida","short_name":"Corrida","url":"./index.html?ftkAction=new-ride"},
+    {"name":"Novo lançamento","short_name":"Lançar","url":"./index.html?ftkAction=new-launch"},
+    {"name":"Abastecimento","short_name":"Combustível","url":"./index.html?ftkAction=fuel"}
+  ]
+}
