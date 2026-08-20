@@ -15,14 +15,15 @@
 <script>
 const DB='ftk-pwa-shell-v1',STORE='app',KEY='html';
 const BACKEND='https://lkwsnfiblwqjcnewvfsy.supabase.co/functions/v1/ftk-push';
-const FTK_DATA_KEY='ftk_central_gestao_pro_v1';
 function openDb(){return new Promise((ok,no)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)})}
 async function getHtml(){const d=await openDb();return new Promise((ok,no)=>{const t=d.transaction(STORE,'readonly'),r=t.objectStore(STORE).get(KEY);r.onsuccess=()=>ok(r.result||'');r.onerror=()=>no(r.error)})}
-function migrationBridge(){
-  const code=`(()=>{if(window.__ftkPwaImportBridge)return;window.__ftkPwaImportBridge=true;const KEY='${FTK_DATA_KEY}';async function importJson(){const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.style.position='fixed';input.style.left='-9999px';document.body.appendChild(input);input.addEventListener('change',async()=>{const f=input.files&&input.files[0];if(!f){input.remove();return}try{const txt=await f.text();const x=JSON.parse(txt);if(!x||!x.version||!Array.isArray(x.transactions))throw new Error('backup inválido');const old=localStorage.getItem(KEY);if(old)localStorage.setItem(KEY+'_antes_importacao_pwa',old);x.meta={...(x.meta||{}),lastImportAt:new Date().toISOString(),lastImportFileName:f.name};localStorage.setItem(KEY,JSON.stringify(x));alert('Backup importado. O FTK será recarregado agora.');location.reload()}catch(err){console.error(err);alert('Não foi possível importar este backup JSON. Confira se é um backup do FTK.')}finally{input.remove()}});input.click()}document.addEventListener('click',e=>{const btn=e.target.closest&&e.target.closest('#dashboardImportBtn');if(!btn)return;e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();importJson()},true);window.ftkPwaImportJson=importJson;})();`;
-  return '<script id="ftkPwaImportBridge">'+code+'</scr'+'ipt>';
+function patch(html){
+  let out=String(html).replaceAll('__FTK_PUSH_BACKEND_URL__',BACKEND);
+  const original='<button class="ghost dashboard-import-btn" id="dashboardImportBtn" type="button">⇩ Importar JSON</button>';
+  const nativePicker='<button class="ghost dashboard-import-btn" id="dashboardImportBtn" type="button" style="display:none">⇩ Importar JSON</button><label for="importFile" class="ghost dashboard-import-btn" style="display:flex;align-items:center;justify-content:center;min-height:42px;border:1px solid var(--line);border-radius:12px;font-weight:800;cursor:pointer;grid-column:1/-1">⇩ Importar JSON</label>';
+  if(out.includes(original)) out=out.replace(original,nativePicker);
+  return out;
 }
-function patch(html){let out=String(html).replaceAll('__FTK_PUSH_BACKEND_URL__',BACKEND);const bridge=migrationBridge();if(/<\/body>/i.test(out))out=out.replace(/<\/body>/i,bridge+'</body>');else out+=bridge;return out}
 function boot(html){const fixed=patch(html);document.open();document.write(fixed);document.close()}
 (async()=>{try{if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js',{scope:'./'}).catch(console.warn);const html=await getHtml();if(html){boot(html);return}location.replace('./setup.html')}catch(e){document.querySelector('#status').innerHTML='<h1>FTK Gestão Pro</h1><div class="muted">Não foi possível abrir o aplicativo.</div><div class="err">'+String(e)+'</div><a class="btn" href="./setup.html">Configurar FTK</a>'}})();
 </script>
